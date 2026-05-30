@@ -12,7 +12,7 @@
  * prototype's confirmation panel so the page stays demoable end-to-end.
  */
 import { loadStripe, type Stripe, type StripeEmbeddedCheckout } from '@stripe/stripe-js';
-import { api, ApiError, API_BASE, type StripePlan, type ApiProduct } from './api';
+import { api, ApiError, API_BASE, type StripePlan, type ApiProduct, type ApiPrice } from './api';
 import { icon } from './icons';
 import {
   PLANS,
@@ -69,6 +69,13 @@ const state: AppState = {
 
 let stripe: Stripe | null = null;
 let embedded: StripeEmbeddedCheckout | null = null;
+
+/**
+ * Product id used when creating the checkout session. Defaults to the design
+ * constant but is overwritten with whatever GET /api/products actually serves,
+ * so checkout always targets the live product rather than a stale hardcoded id.
+ */
+let activeProductId = PRODUCT_ID;
 
 const root = document.getElementById('root')!;
 
@@ -453,7 +460,7 @@ async function tryStripeCheckout(): Promise<boolean> {
   if (!stripe) return false;
   try {
     const { clientSecret } = await api.createSession({
-      productId: PRODUCT_ID,
+      productId: activeProductId,
       plan: stripePlan(),
       email: state.form.email.trim(),
       firstName: state.form.firstName.trim(),
@@ -618,14 +625,34 @@ function bindEvents(): void {
 
 /* --------------------------- live price loading --------------------------- */
 
+interface PricedEntry {
+  price: ApiPrice;
+  cents: number;
+}
+
 /**
- * Map prices returned by GET /api/products onto the two plans, by Stripe
- * price id. Updates amount + currency in place. Returns true if anything
- * was applied (so the checkout can re-render with live numbers).
- *
- * Every reason a live price might fail to apply is logged loudly via
- * console.error so a silent fallback to the hardcoded design values is
- * always visible in the logs.
+ * Decide which UI plan slot ('sp' = self-paced, 'co' = cohort) a Stripe price
+ * belongs to — preferring an explicit planSlot, then the price nickname, with
+ * no decision when neither is conclusive (the caller fills the rest by amount).
+ */
+function explicitSlot(price: ApiPrice): 'sp' | 'co' | null {
+  const slot = (price.planSlot ?? '').toString().trim().toLowerCase();
+  if (slot === 'sp' || slot === 'co') return slot;
+  if (/self|paced|solo|learn/.test(slot)) return 'sp';
+  if (/cohort|live|group|week/.test(slot)) return 'co';
+
+  const nick = (price.nickname ?? '').toLowerCase();
+  if (/self|paced|solo|learn/.test(nick)) return 'sp';
+  if (/cohort|live|group|week/.test(nick)) return 'co';
+  return null;
+}
+
+/**
+ * Pull the product + prices straight from GET /api/products and map them onto
+ * the two plan slots — first by explicit slot/nickname, then by amount
+ * (cheapest -> self-paced, dearest -> cohort) for anything left over. The
+ * hardcoded ids in data.ts are no longer trusted; the API is the source of
+ * truth. Returns true if any live price was applied (so checkout re-renders).
  */
 function applyApiPrices(products: ApiProduct[]): boolean {
   const exact = products.find((p) => p.id === PRODUCT_ID);
@@ -633,42 +660,61 @@ function applyApiPrices(products: ApiProduct[]): boolean {
   if (!product) {
     console.error(
       '[prices] /api/products returned no products — falling back to hardcoded design prices.',
-      { expectedProductId: PRODUCT_ID, received: products },
+      { received: products },
     );
     return false;
   }
+  activeProductId = product.id;
   if (!exact) {
-    console.error(
-      `[prices] product "${PRODUCT_ID}" not found in /api/products — using first product "${product.id}" instead.`,
-      { availableProductIds: products.map((p) => p.id) },
+    console.info(
+      `[prices] using product "${product.id}" ("${product.name}") from /api/products.`,
     );
   }
 
+  // Valid, priced entries only.
+  const priced: PricedEntry[] = product.prices
+    .map((price) => ({ price, cents: price.unitAmount ?? price.unit_amount ?? NaN }))
+    .filter((e) => Number.isFinite(e.cents)) as PricedEntry[];
+
+  if (!priced.length) {
+    console.error(
+      `[prices] product "${product.id}" has no usable prices — keeping hardcoded fallback values.`,
+      { prices: product.prices },
+    );
+    return false;
+  }
+
+  // Pass 1: assign by explicit slot / nickname.
+  const assigned: Record<'sp' | 'co', PricedEntry | undefined> = { sp: undefined, co: undefined };
+  const leftover: PricedEntry[] = [];
+  for (const entry of priced) {
+    const slot = explicitSlot(entry.price);
+    if (slot && !assigned[slot]) assigned[slot] = entry;
+    else leftover.push(entry);
+  }
+
+  // Pass 2: fill remaining slots by amount — cheapest = self-paced, dearest = cohort.
+  if ((!assigned.sp || !assigned.co) && leftover.length) {
+    const byAmount = [...leftover].sort((a, b) => a.cents - b.cents);
+    if (!assigned.sp) assigned.sp = byAmount.shift();
+    if (!assigned.co) assigned.co = byAmount.pop() ?? byAmount.shift();
+  }
+
+  // Apply onto the plans in place.
   let currency: string | null = null;
   let applied = false;
-
   (['sp', 'co'] as const).forEach((id) => {
-    const plan = PLANS[id];
-    const match = product.prices.find((pr) => pr.id === plan.stripePriceId);
-    if (!match) {
-      console.error(
-        `[prices] no API price matched plan "${id}" (stripePriceId "${plan.stripePriceId}") — keeping hardcoded ${plan.price}.`,
-        { availablePriceIds: product.prices.map((pr) => pr.id) },
-      );
+    const entry = assigned[id];
+    if (!entry) {
+      console.error(`[prices] no API price could be mapped to plan "${id}" — keeping hardcoded ${PLANS[id].price}.`);
       return;
     }
-    const cents = match.unitAmount ?? match.unit_amount;
-    if (cents != null) {
-      plan.price = cents / 100;
-      if (plan.canInstall) plan.installEach = Math.round(plan.price / 2);
-      applied = true;
-    } else {
-      console.error(
-        `[prices] API price "${match.id}" for plan "${id}" has no unitAmount/unit_amount — keeping hardcoded ${plan.price}.`,
-        match,
-      );
-    }
-    if (match.currency) currency = match.currency;
+    const plan = PLANS[id];
+    plan.price = entry.cents / 100;
+    plan.stripePriceId = entry.price.id;
+    if (plan.canInstall) plan.installEach = Math.round(plan.price / 2);
+    if (entry.price.currency) currency = entry.price.currency;
+    applied = true;
   });
 
   if (currency) setCurrency(currency);

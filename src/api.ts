@@ -24,6 +24,10 @@ export interface ApiPrice {
   currency?: string;
   recurring?: { interval?: string; interval_count?: number } | null;
   metadata?: Record<string, string>;
+  nickname?: string | null;
+  planSlot?: string | null;
+  formatted?: string | null;
+  type?: string | null;
 }
 
 export interface ApiProduct {
@@ -40,7 +44,12 @@ export interface ProductsResponse {
 
 export interface CreateSessionPayload {
   productId: string;
-  plan: StripePlan;
+  /**
+   * The Stripe price id to charge (e.g. "price_1Tckj9..."). The backend's
+   * /api/sessions/create resolves the session by this value, so it must be a
+   * real price id from /api/products — NOT a keyword like "full".
+   */
+  plan: string;
   email: string;
   firstName: string;
   lastName: string;

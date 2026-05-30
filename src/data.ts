@@ -23,11 +23,13 @@ export const PLANS: Record<'sp' | 'co', Plan> = {
     mode: 'Self-paced',
     modeIcon: 'book-open',
     name: 'Self-paced access',
-    price: 490,
+    // Fallback only — overridden by GET /api/products. Matches the live
+    // "Self Learning" price (NZ$97.00 / price_1Tckj9L2NSYmkihOPRPBsJnk).
+    price: 97,
     note: 'one-time',
     canInstall: false,
     sub: 'Curriculum, templates & community · lifetime access · learn at your own pace',
-    stripePriceId: 'price_1TcXCGL2NSYmkihOsl7OTt9t', // $97 tier
+    stripePriceId: 'price_1Tckj9L2NSYmkihOPRPBsJnk', // NZ$97 "Self Learning"
     stripePlan: 'installment',
   },
   co: {
@@ -36,17 +38,19 @@ export const PLANS: Record<'sp' | 'co', Plan> = {
     modeIcon: 'users',
     popular: true,
     name: '4-week cohort',
-    price: 990,
+    // Fallback only — overridden by GET /api/products. Matches the live
+    // "Cohort" price (NZ$497.00 / price_1TckiJL2NSYmkihOBWzknNfl).
+    price: 497,
     note: 'next intake Jun 2026',
     canInstall: false,
     sub: 'Everything in self-paced + 4 weeks of live sessions, the 30-day challenge & mentor feedback',
-    stripePriceId: 'price_1TcXCoL2NSYmkihOZnFLAlDz', // $497 tier
+    stripePriceId: 'price_1TckiJL2NSYmkihOBWzknNfl', // NZ$497 "Cohort"
     stripePlan: 'full',
   },
 };
 
 /** Stripe product the session is created against. */
-export const PRODUCT_ID = 'prod_UbkhfckEuxTbzz';
+export const PRODUCT_ID = 'prod_UbyfRuBJKm8F1o';
 
 export const COUPONS: Record<string, number> = { DQ20: 0.2, TEAM10: 0.1 };
 
@@ -171,11 +175,11 @@ export function setCurrency(c: string): void {
 }
 
 const CURRENCY_SYMBOL: Record<string, string> = {
-  NZD: 'NZ$', AUD: 'A$', USD: '$', CAD: 'C$', GBP: '\u00A3', EUR: '\u20AC',
+  NZD: 'NZ$', AUD: 'A$', USD: '$', CAD: 'C$', GBP: '£', EUR: '€',
 };
 
 export const fmt = (n: number): string => {
-  const sym = CURRENCY_SYMBOL[CURRENCY] ?? CURRENCY + '\u00A0';
+  const sym = CURRENCY_SYMBOL[CURRENCY] ?? CURRENCY + ' ';
   return sym + Math.round(n).toLocaleString('en-NZ');
 };
 
