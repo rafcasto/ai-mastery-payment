@@ -1,0 +1,336 @@
+/* ============================================================
+   DEMOCRATIZE QUALITY — Colors & Type
+   Single source of truth for color tokens, type scale,
+   font faces, and semantic style aliases.
+   ============================================================ */
+
+/* ---------- 1. Font faces (self-hosted from /fonts) -------- */
+
+@font-face {
+  font-family: "Poppins";
+  src: url("fonts/Poppins-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Poppins";
+  src: url("fonts/Poppins-Italic.ttf") format("truetype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Poppins";
+  src: url("fonts/Poppins-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Poppins";
+  src: url("fonts/Poppins-SemiBold.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Poppins";
+  src: url("fonts/Poppins-SemiBoldItalic.ttf") format("truetype");
+  font-weight: 600;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Poppins";
+  src: url("fonts/Poppins-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Poppins";
+  src: url("fonts/Poppins-BoldItalic.ttf") format("truetype");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Poppins";
+  src: url("fonts/Poppins-ExtraBold.ttf") format("truetype");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Poppins";
+  src: url("fonts/Poppins-Black.ttf") format("truetype");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Roboto";
+  src: url("fonts/Roboto-Light.ttf") format("truetype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Roboto";
+  src: url("fonts/Roboto-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Roboto";
+  src: url("fonts/Roboto-Italic.ttf") format("truetype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Roboto";
+  src: url("fonts/Roboto-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Roboto";
+  src: url("fonts/Roboto-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Roboto";
+  src: url("fonts/Roboto-BoldItalic.ttf") format("truetype");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* ---------- 2. Tokens -------------------------------------- */
+
+:root {
+  /* ---- Brand colors (raw) ---- */
+  --dq-deep-teal:    #1B7B8A;  /* Primary  */
+  --dq-turquoise:    #40CFDE;  /* Primary  */
+  --dq-light-mint:   #A8E6CF;  /* Secondary (often 20% transp) */
+  --dq-ocean-blue:   #2B8FA3;  /* Secondary */
+  --dq-slate:        #4A5F6A;  /* Secondary (often 20% transp) */
+  --dq-light-teal:   #83E3DE;  /* Secondary */
+  --dq-sage-green:   #7BC8A4;  /* Accent / CTA */
+
+  /* ---- 20% transparency variants (per brand book) ---- */
+  --dq-light-mint-20: rgb(168 230 207 / 20%);
+  --dq-slate-20:      rgb(74 95 106 / 20%);
+
+  /* ---- Neutrals (derived, used in body copy + UI) ---- */
+  --dq-ink:        #14272D;   /* primary text */
+  --dq-ink-soft:   #2A3E47;   /* secondary text */
+  --dq-muted:      #6B7B83;   /* tertiary / meta */
+  --dq-line:       #E3ECEE;   /* hairline border */
+  --dq-surface:    #F6FAFB;   /* page bg, off-white */
+  --dq-surface-2:  #ECF4F5;   /* alt card / hover bg */
+  --dq-white:      #FFFFFF;
+
+  /* ---- Rainbow divider palette (1 topic = 1 colour) ---- */
+  --dq-divider-red:        #C8243A;
+  --dq-divider-orange:     #E97A1F;
+  --dq-divider-yellow:     #F5D02B;
+  --dq-divider-green-light:#9ACB75;
+  --dq-divider-green-dark: #2E7D32;
+  --dq-divider-blue:       #1F44C9;
+  --dq-divider-violet:     #8B3FBF;
+
+  /* ---- Semantic color aliases ---- */
+  --color-primary:        var(--dq-deep-teal);
+  --color-primary-bright: var(--dq-turquoise);
+  --color-accent:         var(--dq-sage-green);   /* CTA */
+  --color-accent-hover:   #6BB893;
+  --color-link:           var(--dq-deep-teal);
+  --color-link-hover:     var(--dq-ocean-blue);
+
+  --fg-1: var(--dq-ink);
+  --fg-2: var(--dq-ink-soft);
+  --fg-3: var(--dq-muted);
+  --fg-inverse: var(--dq-white);
+
+  --bg-1: var(--dq-white);
+  --bg-2: var(--dq-surface);
+  --bg-3: var(--dq-surface-2);
+  --bg-brand-soft: var(--dq-light-mint-20);
+
+  --border-1: var(--dq-line);
+  --border-strong: rgb(74 95 106 / 30%);
+
+  /* ---- Typography families ---- */
+  --font-display: "Poppins", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-body:    "Roboto", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono:    ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* ---- Type scale (Brand book spec) ---- */
+  --fs-h1: 48px;   --fw-h1: 700;  --lh-h1: 1.1;
+  --fs-h2: 36px;   --fw-h2: 600;  --lh-h2: 1.15;
+  --fs-h3: 30px;   --fw-h3: 600;  --lh-h3: 1.2;
+  --fs-h4: 18px;   --fw-h4: 600;  --lh-h4: 1.3;
+  --fs-body: 16px; --fw-body: 600; --lh-body: 1.55; /* brand body is bold 600 */
+  --fs-body-reg: 16px; --fw-body-reg: 400; --lh-body-reg: 1.55;
+  --fs-small: 14px; --fw-small: 400; --lh-small: 1.5;
+  --fs-link: 14px; --fw-link: 400;
+  --fs-testimonial-name: 18px; --fw-testimonial-name: 600;
+  --fs-testimonial-body: 18px; --fw-testimonial-body: 400;
+
+  /* ---- Spacing scale (4 px base) ---- */
+  --space-0:  0;
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  24px;
+  --space-6:  32px;
+  --space-7:  48px;
+  --space-8:  64px;
+  --space-9:  96px;
+  --space-10: 128px;
+
+  /* ---- Radii ---- */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 32px;
+  --radius-pill: 999px;
+
+  /* ---- Elevation (soft, teal-tinted) ---- */
+  --shadow-1: 0 1px 2px rgb(20 39 45 / 6%), 0 1px 1px rgb(20 39 45 / 4%);
+  --shadow-2: 0 4px 12px rgb(27 123 138 / 8%), 0 2px 4px rgb(20 39 45 / 5%);
+  --shadow-3: 0 12px 32px rgb(27 123 138 / 12%), 0 4px 8px rgb(20 39 45 / 6%);
+  --shadow-cta: 0 8px 20px rgb(123 200 164 / 35%);
+
+  /* ---- Focus ring ---- */
+  --focus-ring: 0 0 0 3px rgb(64 207 222 / 45%);
+}
+
+/* ---------- 3. Semantic element defaults ------------------- */
+
+html, body {
+  font-family: var(--font-body);
+  font-size: var(--fs-body-reg);
+  font-weight: var(--fw-body-reg);
+  line-height: var(--lh-body-reg);
+  color: var(--fg-1);
+  background: var(--bg-1);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, .h1 {
+  font-family: var(--font-display);
+  font-size: var(--fs-h1);
+  font-weight: var(--fw-h1);
+  line-height: var(--lh-h1);
+  letter-spacing: -0.01em;
+  color: var(--fg-1);
+  margin: 0;
+}
+h2, .h2 {
+  font-family: var(--font-display);
+  font-size: var(--fs-h2);
+  font-weight: var(--fw-h2);
+  line-height: var(--lh-h2);
+  letter-spacing: -0.005em;
+  color: var(--fg-1);
+  margin: 0;
+}
+h3, .h3 {
+  font-family: var(--font-display);
+  font-size: var(--fs-h3);
+  font-weight: var(--fw-h3);
+  line-height: var(--lh-h3);
+  color: var(--fg-1);
+  margin: 0;
+}
+h4, .h4 {
+  font-family: var(--font-display);
+  font-size: var(--fs-h4);
+  font-weight: var(--fw-h4);
+  line-height: var(--lh-h4);
+  color: var(--fg-1);
+  margin: 0;
+}
+
+/* Body — brand spec uses 16 px / weight 600 for "body" highlighted copy.
+   Use .body-reg (400) for long-form paragraphs. */
+p, .body {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-body);
+  line-height: var(--lh-body);
+  color: var(--fg-1);
+  margin: 0 0 var(--space-4);
+}
+.body-reg {
+  font-family: var(--font-body);
+  font-weight: 400;
+}
+.small, small {
+  font-size: var(--fs-small);
+  line-height: var(--lh-small);
+  color: var(--fg-2);
+}
+
+a, .link {
+  font-family: var(--font-body);
+  font-size: var(--fs-link);
+  font-weight: var(--fw-link);
+  color: var(--color-link);
+  text-decoration: underline;
+  text-decoration-color: rgb(27 123 138 / 40%);
+  text-underline-offset: 2px;
+  transition: color 120ms ease, text-decoration-color 120ms ease;
+}
+a:hover, .link:hover {
+  color: var(--color-link-hover);
+  text-decoration-color: currentColor;
+}
+
+em, i, .italic {
+  font-style: italic;
+  color: var(--fg-2);  /* italics = secondary info */
+}
+
+strong, b, .bold-key {
+  font-weight: 700;
+  color: var(--fg-1);  /* bold = the key word */
+}
+
+/* Testimonials get their own treatment */
+.testimonial-quote {
+  font-family: var(--font-body);
+  font-size: var(--fs-testimonial-body);
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--fg-1);
+}
+.testimonial-author {
+  font-family: var(--font-display);
+  font-size: var(--fs-testimonial-name);
+  font-weight: var(--fw-testimonial-name);
+  color: var(--fg-1);
+}
+
+code, kbd, samp, pre {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+}
+
+/* ---------- 4. Utility — text highlight (brand pattern) ---- */
+.dq-highlight {
+  background: linear-gradient(180deg, transparent 60%, rgb(168 230 207 / 70%) 60%);
+  padding: 0 0.1em;
+}
