@@ -7,12 +7,14 @@
  *   POST /api/sessions/create  -> embedded Checkout clientSecret
  *   GET  /api/coupons/:code     -> server-side coupon validation
  *
- * The CTA attempts a real Stripe Embedded Checkout. When the API is
- * unreachable (e.g. origin-locked during local dev) it falls back to the
+ * Payment is collected ONCE, by Stripe. This page gathers only the buyer's
+ * contact details + plan + coupon, then hands off to Stripe Embedded Checkout
+ * which securely collects the card (and any other payment method). When the API
+ * is unreachable (e.g. origin-locked during local dev) it falls back to the
  * prototype's confirmation panel so the page stays demoable end-to-end.
  */
 import { loadStripe, type Stripe, type StripeEmbeddedCheckout } from '@stripe/stripe-js';
-import { api, ApiError, API_BASE, type StripePlan, type ApiProduct, type ApiPrice } from './api';
+import { api, ApiError, API_BASE, type ApiProduct, type ApiPrice } from './api';
 import { icon } from './icons';
 import {
   PLANS,
@@ -33,10 +35,6 @@ interface FormState {
   firstName: string;
   lastName: string;
   email: string;
-  cardNumber: string;
-  expiry: string;
-  cvc: string;
-  country: string;
 }
 
 interface AppState {
@@ -45,7 +43,6 @@ interface AppState {
   couponInput: string;
   appliedCoupon: { code: string; pct: number } | null;
   couponMsg: string;
-  payMethod: 'card' | 'paypal';
   form: FormState;
   errors: Partial<Record<keyof FormState, string>>;
   submitted: boolean;
@@ -59,8 +56,7 @@ const state: AppState = {
   couponInput: '',
   appliedCoupon: null,
   couponMsg: '',
-  payMethod: 'card',
-  form: { firstName: '', lastName: '', email: '', cardNumber: '', expiry: '', cvc: '', country: 'New Zealand' },
+  form: { firstName: '', lastName: '', email: '' },
   errors: {},
   submitted: false,
   orderRef: '',
@@ -187,48 +183,19 @@ function checkoutPanelHTML(): string {
   const planData = PLANS[state.plan];
   const price = pricing(planData, state.appliedCoupon);
 
-  const cardZone =
-    state.payMethod === 'card'
-      ? `
+  // Payment is collected by Stripe on the next step — we only reassure here.
+  const payZone = `
     <div class="card-zone">
       <div class="card-icons">
         <span class="card-chip cc-v">VISA</span>
         <span class="card-chip cc-m">MC</span>
         <span class="card-chip cc-a">AMEX</span>
+        <span class="card-chip">PayPal</span>
       </div>
-      <div class="field">
-        <label class="field-label">Card number</label>
-        <input class="input${state.errors.cardNumber ? ' err' : ''}" data-field="cardNumber" value="${state.form.cardNumber}" placeholder="1234 1234 1234 1234" inputmode="numeric" />
-        ${errLine('cardNumber')}
-      </div>
-      <div class="row-2">
-        <div class="field">
-          <label class="field-label">Expiry</label>
-          <input class="input${state.errors.expiry ? ' err' : ''}" data-field="expiry" value="${state.form.expiry}" placeholder="MM / YY" inputmode="numeric" />
-          ${errLine('expiry')}
-        </div>
-        <div class="field">
-          <label class="field-label">CVC</label>
-          <input class="input${state.errors.cvc ? ' err' : ''}" data-field="cvc" value="${state.form.cvc}" placeholder="123" inputmode="numeric" />
-          ${errLine('cvc')}
-        </div>
-      </div>
-      <div class="field">
-        <label class="field-label">Country</label>
-        <div class="select-wrap">
-          <select class="select" data-field="country">
-            ${['New Zealand', 'Australia', 'United Kingdom', 'United States', 'Other']
-              .map((c) => `<option${c === state.form.country ? ' selected' : ''}>${c}</option>`)
-              .join('')}
-          </select>
-          ${icon('chevron-down', { size: 16 })}
-        </div>
-      </div>
-    </div>`
-      : `
-    <div class="card-zone">
       <p style="font-family:var(--font-body);font-size:13.5px;line-height:1.6;color:var(--fg-2);margin:4px 2px 0">
-        You'll be redirected to <b style="font-weight:600;color:var(--fg-1)">PayPal</b> to complete payment securely, then brought right back to confirm your seat.
+        Click <b style="font-weight:600;color:var(--fg-1)">Secure your place</b> and you’ll enter your card details
+        <b style="font-weight:600;color:var(--fg-1)">once</b>, on a secure checkout powered by
+        <b style="font-weight:600;color:var(--fg-1)">Stripe</b>. We never see or store your card number.
       </p>
     </div>`;
 
@@ -261,9 +228,7 @@ function checkoutPanelHTML(): string {
 
   const ctaInner = state.processing
     ? `${icon('lock', { size: 16 })} Processing…`
-    : state.payMethod === 'paypal'
-      ? `Continue to PayPal ${icon('arrow-up-right', { size: 17 })}`
-      : `${icon('lock', { size: 16 })} Secure your place`;
+    : `${icon('lock', { size: 16 })} Secure your place`;
 
   return `
     <div class="checkout">
@@ -297,13 +262,8 @@ function checkoutPanelHTML(): string {
           ${errLine('email')}
         </div>
 
-        <div class="block-label">Payment method</div>
-        <div class="pm-tabs">
-          <button type="button" class="pm-tab${state.payMethod === 'card' ? ' sel' : ''}" data-pm="card">${icon('credit-card', { size: 18 })} Card</button>
-          <button type="button" class="pm-tab${state.payMethod === 'paypal' ? ' sel' : ''}" data-pm="paypal"><span class="pp-mark"><span class="a">Pay</span><span class="b">Pal</span></span></button>
-        </div>
-
-        ${cardZone}
+        <div class="block-label">Payment</div>
+        ${payZone}
         ${couponBlock}
 
         <div class="sum">
@@ -428,13 +388,6 @@ function validate(): boolean {
   if (!f.lastName.trim()) e.lastName = 'Required';
   if (!f.email.trim()) e.email = 'Enter your email';
   else if (!EMAIL_RE.test(f.email.trim())) e.email = 'Enter a valid email';
-  if (state.payMethod === 'card') {
-    if (f.cardNumber.replace(/\s/g, '').length < 15) e.cardNumber = 'Enter a valid card number';
-    const m = f.expiry.replace(/\D/g, '');
-    const mm = parseInt(m.slice(0, 2), 10);
-    if (m.length < 4 || !(mm >= 1 && mm <= 12)) e.expiry = 'MM / YY';
-    if (f.cvc.replace(/\D/g, '').length < 3) e.cvc = 'CVC';
-  }
   state.errors = e;
   return Object.keys(e).length === 0;
 }
@@ -447,13 +400,9 @@ function simulateSuccess(): void {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-/** Map UI selection to the Stripe plan keyword from the integration brief. */
-function stripePlan(): StripePlan {
-  return PLANS[state.plan].stripePlan;
-}
-
 /**
- * Live checkout: create an embedded Checkout session and mount it.
+ * Live checkout: create an embedded Checkout session and mount it. This is the
+ * ONE place the buyer enters their card — Stripe collects it securely here.
  * Returns true if Stripe took over; false to fall back to the design's success.
  */
 async function tryStripeCheckout(): Promise<boolean> {
@@ -461,7 +410,7 @@ async function tryStripeCheckout(): Promise<boolean> {
   try {
     const { clientSecret } = await api.createSession({
       productId: activeProductId,
-      plan: stripePlan(),
+      plan: PLANS[state.plan].stripePriceId,
       email: state.form.email.trim(),
       firstName: state.form.firstName.trim(),
       lastName: state.form.lastName.trim(),
@@ -518,21 +467,6 @@ function reset(): void {
   renderCheckout();
 }
 
-/* ------------------------------- card masks ------------------------------- */
-
-function maskCard(field: keyof FormState, raw: string): string {
-  if (field === 'cardNumber') {
-    return raw.replace(/\D/g, '').slice(0, 16).replace(/(.{4})/g, '$1 ').trim();
-  }
-  if (field === 'expiry') {
-    let v = raw.replace(/\D/g, '').slice(0, 4);
-    if (v.length > 2) v = v.slice(0, 2) + ' / ' + v.slice(2);
-    return v;
-  }
-  if (field === 'cvc') return raw.replace(/\D/g, '').slice(0, 4);
-  return raw;
-}
-
 /* ----------------------------- event wiring ------------------------------- */
 
 function bindEvents(): void {
@@ -552,13 +486,6 @@ function bindEvents(): void {
     const planBtn = target.closest<HTMLElement>('[data-plan]');
     if (planBtn) {
       state.plan = planBtn.dataset.plan as 'sp' | 'co';
-      renderCheckout();
-      return;
-    }
-
-    const pmBtn = target.closest<HTMLElement>('[data-pm]');
-    if (pmBtn) {
-      state.payMethod = pmBtn.dataset.pm as 'card' | 'paypal';
       renderCheckout();
       return;
     }
@@ -598,19 +525,12 @@ function bindEvents(): void {
     }
     if (field in state.form) {
       const key = field as keyof FormState;
-      const masked = maskCard(key, input.value);
-      state.form[key] = masked;
-      if (masked !== input.value) input.value = masked; // reflect mask
+      state.form[key] = input.value;
       if (state.errors[key]) {
         state.errors[key] = undefined;
         renderCheckout(); // error removal changes layout
       }
     }
-  });
-
-  root.addEventListener('change', (ev) => {
-    const sel = ev.target as HTMLSelectElement;
-    if (sel.dataset.field === 'country') state.form.country = sel.value;
   });
 
   // Enter to apply coupon.
