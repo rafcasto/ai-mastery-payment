@@ -12,7 +12,7 @@
  * prototype's confirmation panel so the page stays demoable end-to-end.
  */
 import { loadStripe, type Stripe, type StripeEmbeddedCheckout } from '@stripe/stripe-js';
-import { api, ApiError, type StripePlan, type ApiProduct } from './api';
+import { api, ApiError, API_BASE, type StripePlan, type ApiProduct } from './api';
 import { icon } from './icons';
 import {
   PLANS,
@@ -622,10 +622,27 @@ function bindEvents(): void {
  * Map prices returned by GET /api/products onto the two plans, by Stripe
  * price id. Updates amount + currency in place. Returns true if anything
  * was applied (so the checkout can re-render with live numbers).
+ *
+ * Every reason a live price might fail to apply is logged loudly via
+ * console.error so a silent fallback to the hardcoded design values is
+ * always visible in the logs.
  */
 function applyApiPrices(products: ApiProduct[]): boolean {
-  const product = products.find((p) => p.id === PRODUCT_ID) ?? products[0];
-  if (!product) return false;
+  const exact = products.find((p) => p.id === PRODUCT_ID);
+  const product = exact ?? products[0];
+  if (!product) {
+    console.error(
+      '[prices] /api/products returned no products — falling back to hardcoded design prices.',
+      { expectedProductId: PRODUCT_ID, received: products },
+    );
+    return false;
+  }
+  if (!exact) {
+    console.error(
+      `[prices] product "${PRODUCT_ID}" not found in /api/products — using first product "${product.id}" instead.`,
+      { availableProductIds: products.map((p) => p.id) },
+    );
+  }
 
   let currency: string | null = null;
   let applied = false;
@@ -633,17 +650,33 @@ function applyApiPrices(products: ApiProduct[]): boolean {
   (['sp', 'co'] as const).forEach((id) => {
     const plan = PLANS[id];
     const match = product.prices.find((pr) => pr.id === plan.stripePriceId);
-    if (!match) return;
+    if (!match) {
+      console.error(
+        `[prices] no API price matched plan "${id}" (stripePriceId "${plan.stripePriceId}") — keeping hardcoded ${plan.price}.`,
+        { availablePriceIds: product.prices.map((pr) => pr.id) },
+      );
+      return;
+    }
     const cents = match.unitAmount ?? match.unit_amount;
     if (cents != null) {
       plan.price = cents / 100;
       if (plan.canInstall) plan.installEach = Math.round(plan.price / 2);
       applied = true;
+    } else {
+      console.error(
+        `[prices] API price "${match.id}" for plan "${id}" has no unitAmount/unit_amount — keeping hardcoded ${plan.price}.`,
+        match,
+      );
     }
     if (match.currency) currency = match.currency;
   });
 
   if (currency) setCurrency(currency);
+  if (!applied) {
+    console.error(
+      '[prices] no live prices were applied — the page is showing hardcoded fallback values, NOT real Stripe prices.',
+    );
+  }
   return applied;
 }
 
@@ -658,15 +691,28 @@ async function init(): Promise<void> {
     const { publishableKey } = await api.getConfig();
     stripe = await loadStripe(publishableKey);
   } catch (err) {
-    console.warn('[stripe] /api/config unavailable — CTA will use local confirmation.', err);
+    const status = err instanceof ApiError ? ` (HTTP ${err.status})` : '';
+    console.error(
+      `[stripe] GET ${API_BASE || ''}/api/config FAILED${status} — CTA will use local confirmation instead of live Stripe checkout.`,
+      err,
+    );
   }
 
-  // Pull live prices from /api/products (origin-locked; falls back to design values).
+  // Pull live prices from /api/products. On any failure the page keeps the
+  // hardcoded design values — make that explicit rather than silent.
   try {
     const { products } = await api.getProducts();
-    if (applyApiPrices(products)) renderCheckout();
+    if (applyApiPrices(products)) {
+      console.info('[prices] live prices applied from /api/products.');
+      renderCheckout();
+    }
+    // applyApiPrices already logs an error when nothing was applied.
   } catch (err) {
-    console.warn('[stripe] /api/products unavailable — using design prices.', err);
+    const status = err instanceof ApiError ? ` (HTTP ${err.status})` : '';
+    console.error(
+      `[prices] GET ${API_BASE || ''}/api/products FAILED${status} — page is showing hardcoded fallback prices, NOT live Stripe prices.`,
+      err,
+    );
   }
 }
 
