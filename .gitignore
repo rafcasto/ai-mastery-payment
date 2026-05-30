@@ -16,8 +16,8 @@ dist/
 .claude/
 lesson-module-01a.md
 
-# Env
+# Env (keep non-secret deploy config; ignore real secrets)
 .env
 .env.*
 !.env.example
-.claude
+!.env.production
