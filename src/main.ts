@@ -656,11 +656,11 @@ function applyApiPrices(products: ApiProduct[]): boolean {
     const plan = PLANS[id];
     plan.price = entry.cents / 100;
     plan.stripePriceId = entry.price.id;
-    // /api/sessions/create expects the plan KEYWORD ("full" | "installment"),
-    // which Stripe exposes as the price planSlot. Capture it from the live price
-    // so the keyword we send always matches the plan the buyer selected.
-    const slot = (entry.price.planSlot ?? '').toString().trim().toLowerCase();
-    if (slot === 'full' || slot === 'installment') plan.stripePlan = slot;
+    // Use the raw planSlot from the API (e.g. "selfpeace", "cohort") as the
+    // plan keyword — the backend resolves prices by this value, so we must
+    // forward exactly what the API returned, not a hardcoded keyword.
+    const apiSlot = (entry.price.planSlot ?? '').toString().trim();
+    if (apiSlot) plan.stripePlan = apiSlot;
     if (plan.canInstall) plan.installEach = Math.round(plan.price / 2);
     if (entry.price.currency) currency = entry.price.currency;
     applied = true;

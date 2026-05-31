@@ -11,7 +11,7 @@ const ENV_BASE = import.meta.env.VITE_API_BASE as string | undefined;
 /** Base URL prepended to every API call. Empty = same-origin relative paths. */
 export const API_BASE = (ENV_BASE ?? '').replace(/\/$/, '');
 
-export type StripePlan = 'full' | 'installment';
+export type StripePlan = string;
 
 export interface ConfigResponse {
   publishableKey: string;
