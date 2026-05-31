@@ -5,23 +5,73 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>You're in — AI Enable Testing Workshop · TalentDojo × Democratize Quality</title>
     <link rel="icon" href="/assets/dq/logo-512.png" />
-    <!-- DQ design-system tokens (colours, type, font faces) -->
-    <link rel="stylesheet" href="/assets/dq/colors_and_type.css" />
+    <!-- Fonts via Google CDN — works in preview (file://) and in production -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600;1,700&family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,400;1,700&display=swap" rel="stylesheet" />
     <style>
       /* ============================================================
-         Thank-you / payment-confirmation — page styles
+         DQ design-system tokens (inlined so the page is self-contained)
          ============================================================ */
+      :root {
+        --dq-deep-teal:      #1B7B8A;
+        --dq-turquoise:      #40CFDE;
+        --dq-light-mint:     #A8E6CF;
+        --dq-ocean-blue:     #2B8FA3;
+        --dq-sage-green:     #7BC8A4;
+        --dq-light-mint-20:  rgb(168 230 207 / 20%);
+        --dq-surface:        #F6FAFB;
+        --dq-surface-2:      #ECF4F5;
+        --dq-ink:            #14272D;
+        --dq-ink-soft:       #2A3E47;
+        --dq-muted:          #6B7B83;
+        --dq-line:           #E3ECEE;
+        --dq-white:          #FFFFFF;
 
+        --color-primary:     var(--dq-deep-teal);
+        --color-link:        var(--dq-deep-teal);
+
+        --fg-1:              var(--dq-ink);
+        --fg-2:              var(--dq-ink-soft);
+        --fg-3:              var(--dq-muted);
+
+        --bg-1:              var(--dq-white);
+        --bg-2:              var(--dq-surface);
+
+        --border-1:          var(--dq-line);
+
+        --font-display: "Poppins", system-ui, -apple-system, "Segoe UI", sans-serif;
+        --font-body:    "Roboto", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+        --radius-md:   12px;
+        --radius-lg:   20px;
+        --radius-pill: 999px;
+
+        --shadow-1: 0 1px 2px rgb(20 39 45 / 6%), 0 1px 1px rgb(20 39 45 / 4%);
+        --shadow-2: 0 4px 12px rgb(27 123 138 / 8%), 0 2px 4px rgb(20 39 45 / 5%);
+        --focus-ring: 0 0 0 3px rgb(64 207 222 / 45%);
+      }
+
+      /* ============================================================
+         Reset + base
+         ============================================================ */
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
       html, body {
         background: var(--bg-2);
         color: var(--fg-1);
         font-family: var(--font-body);
+        font-size: 16px;
+        line-height: 1.55;
         -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
       }
 
-      /* ---- Layout ---- */
+      b, strong { font-weight: 700; color: var(--fg-1); }
+
+      /* ============================================================
+         Thank-you page layout
+         ============================================================ */
       .ty-main {
         min-height: 100vh;
         display: flex;
@@ -124,7 +174,6 @@
         margin: 18px auto 0;
         max-width: 46ch;
       }
-      .ty-lede b { font-weight: 600; color: var(--fg-1); }
 
       /* ---- Access card ---- */
       .ty-card {
@@ -162,7 +211,6 @@
         line-height: 1.45;
         color: var(--fg-1);
       }
-      .ty-confirmed .c-text b { font-weight: 600; }
 
       .ty-sec-label {
         font-family: var(--font-display);
@@ -198,7 +246,6 @@
         box-shadow: var(--shadow-1);
       }
       .ty-opt.primary .ty-opt-ic { color: var(--color-primary); }
-      .ty-opt-ic.spin { color: var(--fg-2); }
       .ty-opt-body { flex: 1; min-width: 0; }
       .ty-opt-title {
         font-family: var(--font-display);
@@ -214,7 +261,6 @@
         color: var(--fg-2);
         margin: 5px 0 0;
       }
-      .ty-opt-sub b { font-weight: 600; color: var(--fg-1); }
 
       /* ---- Login button ---- */
       .ty-login {
@@ -233,7 +279,7 @@
         box-shadow: 0 6px 16px rgb(27 123 138 / 26%);
         transition: background 140ms ease, transform 80ms ease;
       }
-      .ty-login:hover { background: #145e6b; }
+      .ty-login:hover { background: #145e6b; color: #fff; }
       .ty-login:active { transform: scale(.985); }
       .ty-login:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 
@@ -347,7 +393,7 @@
 
             <!-- Option 2: new user -->
             <div class="ty-opt">
-              <span class="ty-opt-ic spin">
+              <span class="ty-opt-ic">
                 <span class="ty-spinner"></span>
               </span>
               <div class="ty-opt-body">
@@ -371,6 +417,29 @@
       </div>
     </main>
 
+    <!-- Confetti — runs inline so preview (file://) works without a build step.
+         Vite also compiles src/thank-you.ts which does the same thing in prod. -->
+    <script>
+      (function () {
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        var colors = ['#C8243A','#E97A1F','#EAB308','#2E7D32','#1B7B8A','#40CFDE','#8B3FBF'];
+        var host = document.getElementById('confetti');
+        if (!host) return;
+        for (var i = 0; i < 28; i++) {
+          var p = document.createElement('i');
+          var angle = Math.PI * (0.15 + Math.random() * 0.7) * -1;
+          var dist  = 70 + Math.random() * 90;
+          p.style.setProperty('--dx', Math.cos(angle) * dist * (Math.random() < .5 ? -1 : 1) + 'px');
+          p.style.setProperty('--dy', Math.sin(angle) * dist - 10 + 'px');
+          p.style.setProperty('--dr', Math.random() * 720 - 360 + 'deg');
+          p.style.background = colors[i % colors.length];
+          p.style.animationDelay = Math.random() * 120 + 'ms';
+          if (Math.random() < .4) p.style.borderRadius = '50%';
+          host.appendChild(p);
+        }
+      })();
+    </script>
+    <!-- Vite processes this module for the production build -->
     <script type="module" src="/src/thank-you.ts"></script>
   </body>
 </html>
