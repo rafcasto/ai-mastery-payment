@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import { resolve } from 'path';
 
 /**
  * During local dev the integration's API is origin-locked, so requests from
@@ -15,6 +16,14 @@ export default defineConfig({
         target: 'https://stripe-ghosts-custome-checkout.vercel.app',
         changeOrigin: true,
         secure: true,
+      },
+    },
+  },
+  build: {
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        'thank-you': resolve(__dirname, 'thank-you.html'),
       },
     },
   },
