@@ -14,7 +14,7 @@ export interface Plan {
   /** Stripe price id for the live checkout integration. */
   stripePriceId: string;
   /** Plan keyword sent to POST /api/sessions/create to select this price. */
-  stripePlan: 'full' | 'installment';
+  stripePlan: string;
 }
 
 export const PLANS: Record<'sp' | 'co', Plan> = {
