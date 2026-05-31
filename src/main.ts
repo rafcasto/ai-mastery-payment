@@ -147,9 +147,7 @@ function leftColumnHTML(): string {
               </a>
               <span class="cta-fineprint" style="margin-top:0">Create a free account to take a look inside</span>
             </div>
-            <a class="cta-ghost" href="mailto:rafael@talentdojo.pro?subject=AI%20Testing%20Mastery%20%E2%80%94%20funding%20options">How to get funded</a>
           </div>
-          <div class="free-note">Email us at <a href="mailto:rafael@talentdojo.pro">rafael@talentdojo.pro</a> or schedule a 15-minute consultation call.</div>
         </div>
       </div>
 
