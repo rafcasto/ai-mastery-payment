@@ -30,7 +30,7 @@ export const PLANS: Record<'sp' | 'co', Plan> = {
     canInstall: false,
     sub: 'Curriculum, templates & community · lifetime access · learn at your own pace',
     stripePriceId: 'price_1Tckj9L2NSYmkihOPRPBsJnk', // NZ$97 "Self Learning"
-    stripePlan: 'installment',
+    stripePlan: 'full',
   },
   co: {
     id: 'co',
@@ -45,7 +45,7 @@ export const PLANS: Record<'sp' | 'co', Plan> = {
     canInstall: false,
     sub: 'Everything in self-paced + 4 weeks of live sessions, the 30-day challenge & mentor feedback',
     stripePriceId: 'price_1TckiJL2NSYmkihOBWzknNfl', // NZ$497 "Cohort"
-    stripePlan: 'full',
+    stripePlan: 'installment',
   },
 };
 
