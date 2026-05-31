@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>You're in — AI Enable Testing Workshop · TalentDojo × Democratize Quality</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600;1,700&family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,400;1,700&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================================
+       DEMOCRATIZE QUALITY — Colors & Type
+       ============================================================ */
+
+    :root {
+      --dq-deep-teal:    #1B7B8A;
+      --dq-turquoise:    #40CFDE;
+      --dq-light-mint:   #A8E6CF;
+      --dq-ocean-blue:   #2B8FA3;
+      --dq-slate:        #4A5F6A;
+      --dq-light-teal:   #83E3DE;
+      --dq-sage-green:   #7BC8A4;
+
+      --dq-light-mint-20: rgb(168 230 207 / 20%);
+      --dq-slate-20:      rgb(74 95 106 / 20%);
+
+      --dq-ink:        #14272D;
+      --dq-ink-soft:   #2A3E47;
+      --dq-muted:      #6B7B83;
+      --dq-line:       #E3ECEE;
+      --dq-surface:    #F6FAFB;
+      --dq-surface-2:  #ECF4F5;
+      --dq-white:      #FFFFFF;
+
+      --color-primary:        var(--dq-deep-teal);
+      --color-primary-bright: var(--dq-turquoise);
+      --color-accent:         var(--dq-sage-green);
+      --color-accent-hover:   #6BB893;
+      --color-link:           var(--dq-deep-teal);
+      --color-link-hover:     var(--dq-ocean-blue);
+
+      --fg-1: var(--dq-ink);
+      --fg-2: var(--dq-ink-soft);
+      --fg-3: var(--dq-muted);
+      --fg-inverse: var(--dq-white);
+
+      --bg-1: var(--dq-white);
+      --bg-2: var(--dq-surface);
+      --bg-3: var(--dq-surface-2);
+      --bg-brand-soft: var(--dq-light-mint-20);
+
+      --border-1:      var(--dq-line);
+      --border-strong: rgb(74 95 106 / 30%);
+
+      --font-display: "Poppins", system-ui, -apple-system, "Segoe UI", sans-serif;
+      --font-body:    "Roboto", system-ui, -apple-system, "Segoe UI", sans-serif;
+      --font-mono:    ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+      --radius-xs:   4px;
+      --radius-sm:   8px;
+      --radius-md:   12px;
+      --radius-lg:   20px;
+      --radius-xl:   32px;
+      --radius-pill: 999px;
+
+      --shadow-1: 0 1px 2px rgb(20 39 45 / 6%), 0 1px 1px rgb(20 39 45 / 4%);
+      --shadow-2: 0 4px 12px rgb(27 123 138 / 8%), 0 2px 4px rgb(20 39 45 / 5%);
+      --shadow-3: 0 12px 32px rgb(27 123 138 / 12%), 0 4px 8px rgb(20 39 45 / 6%);
+      --shadow-cta: 0 8px 20px rgb(123 200 164 / 35%);
+      --focus-ring: 0 0 0 3px rgb(64 207 222 / 45%);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      font-family: var(--font-body);
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 1.55;
+      color: var(--fg-1);
+      background: var(--bg-2);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    /* ============================================================
+       Thank-you page — layout + components
+       ============================================================ */
+
+    .ty-main {
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 56px 24px 80px;
+    }
+    .ty-wrap {
+      width: 100%;
+      max-width: 640px;
+      text-align: center;
+    }
+
+    /* Confetti + emoji burst */
+    .ty-burst {
+      position: relative;
+      height: 92px;
+      display: grid;
+      place-items: center;
+    }
+    .ty-emoji {
+      font-size: 60px;
+      line-height: 1;
+      position: relative;
+      z-index: 2;
+      animation: ty-pop 480ms cubic-bezier(.2,.8,.2,1) both;
+    }
+    @keyframes ty-pop {
+      0%   { transform: scale(.4) rotate(-12deg); opacity: 0; }
+      60%  { transform: scale(1.12) rotate(4deg); }
+      100% { transform: scale(1) rotate(0); opacity: 1; }
+    }
+    .confetti {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .confetti i {
+      position: absolute;
+      top: 46px;
+      left: 50%;
+      width: 7px;
+      height: 11px;
+      border-radius: 2px;
+      opacity: 0;
+      transform-origin: center;
+      animation: ty-confetti 1100ms ease-out forwards;
+    }
+    @keyframes ty-confetti {
+      0%   { opacity: 0; transform: translate(-50%, 0) rotate(0); }
+      12%  { opacity: 1; }
+      100% { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(var(--dr)); }
+    }
+
+    /* Status badge */
+    .ty-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      margin-top: 22px;
+      padding: 8px 18px 8px 14px;
+      border-radius: var(--radius-pill);
+      background: rgb(123 200 164 / 20%);
+      border: 1px solid rgb(123 200 164 / 45%);
+      font-family: var(--font-body);
+      font-weight: 600;
+      font-size: 13px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: #2f7d57;
+    }
+    .ty-badge .b-seal {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--dq-sage-green);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+
+    /* Headline */
+    .ty-h1 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 76px;
+      line-height: 1.02;
+      letter-spacing: -0.03em;
+      color: var(--fg-1);
+      margin: 22px 0 0;
+    }
+    .ty-lede {
+      font-family: var(--font-body);
+      font-weight: 400;
+      font-size: 18px;
+      line-height: 1.6;
+      color: var(--fg-2);
+      margin: 18px auto 0;
+      max-width: 46ch;
+    }
+    .ty-lede b { font-weight: 600; color: var(--fg-1); }
+
+    /* Access card */
+    .ty-card {
+      margin-top: 40px;
+      text-align: left;
+      background: var(--bg-1);
+      border: 1px solid var(--border-1);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-2);
+      padding: 8px 32px 32px;
+    }
+
+    /* Confirmed row */
+    .ty-confirmed {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      padding: 24px 0 22px;
+      border-bottom: 1px solid var(--border-1);
+    }
+    .ty-confirmed .c-seal {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--dq-sage-green);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgb(123 200 164 / 35%);
+    }
+    .ty-confirmed .c-text {
+      font-family: var(--font-body);
+      font-size: 16px;
+      line-height: 1.45;
+      color: var(--fg-1);
+    }
+    .ty-confirmed .c-text b { font-weight: 600; }
+
+    .ty-sec-label {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 15px;
+      color: var(--fg-1);
+      margin: 26px 0 16px;
+    }
+
+    /* Access options */
+    .ty-opts { display: flex; flex-direction: column; gap: 14px; }
+    .ty-opt {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      padding: 20px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-1);
+      background: var(--dq-surface);
+    }
+    .ty-opt.primary {
+      background: var(--dq-light-mint-20);
+      border-color: rgb(27 123 138 / 22%);
+    }
+    .ty-opt-ic {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      background: #fff;
+      box-shadow: var(--shadow-1);
+    }
+    .ty-opt.primary .ty-opt-ic { color: var(--color-primary); }
+    .ty-opt-ic.spin { color: var(--fg-2); }
+    .ty-opt-body { flex: 1; min-width: 0; }
+    .ty-opt-title {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 15.5px;
+      color: var(--fg-1);
+    }
+    .ty-opt-sub {
+      font-family: var(--font-body);
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--fg-2);
+      margin: 5px 0 0;
+    }
+    .ty-opt-sub b { font-weight: 600; color: var(--fg-1); }
+
+    /* Login button */
+    .ty-login {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 14px;
+      padding: 12px 20px;
+      border-radius: var(--radius-pill);
+      background: var(--color-primary);
+      color: #fff;
+      text-decoration: none;
+      font-family: var(--font-body);
+      font-weight: 600;
+      font-size: 14.5px;
+      box-shadow: 0 6px 16px rgb(27 123 138 / 26%);
+      transition: background 140ms ease, transform 80ms ease;
+    }
+    .ty-login:hover { background: #145e6b; }
+    .ty-login:active { transform: scale(.985); }
+    .ty-login:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+    /* Spinner */
+    .ty-spinner {
+      width: 22px;
+      height: 22px;
+      border: 2.4px solid rgb(74 95 106 / 22%);
+      border-top-color: var(--color-primary);
+      border-radius: 50%;
+      animation: ty-spin 900ms linear infinite;
+    }
+    @keyframes ty-spin { to { transform: rotate(360deg); } }
+
+    /* Footer */
+    .ty-foot {
+      font-family: var(--font-body);
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--fg-3);
+      margin-top: 28px;
+    }
+
+    /* Responsive */
+    @media (max-width: 560px) {
+      .ty-h1    { font-size: 52px; }
+      .ty-lede  { font-size: 16.5px; }
+      .ty-card  { padding: 8px 20px 24px; }
+      .ty-main  { padding: 36px 18px 64px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .ty-emoji, .confetti i, .ty-spinner { animation: none; }
+    }
+  </style>
+</head>
+<body>
+<main class="ty-main">
+  <div class="ty-wrap">
+
+    <!-- Confetti burst + emoji -->
+    <div class="ty-burst">
+      <div class="confetti" id="confetti"></div>
+      <div class="ty-emoji">🎉</div>
+    </div>
+
+    <!-- Payment badge -->
+    <span class="ty-badge">
+      <span class="b-seal">
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 6 9 17l-5-5"/>
+        </svg>
+      </span>
+      Payment successful
+    </span>
+
+    <!-- Headline -->
+    <h1 class="ty-h1">You're in.</h1>
+    <p class="ty-lede">Smart investment. Your <b>AI testing transformation</b> starts now — and you won't be doing it alone.</p>
+
+    <!-- Access card -->
+    <div class="ty-card">
+
+      <!-- Confirmed row -->
+      <div class="ty-confirmed">
+        <span class="c-seal">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 6 9 17l-5-5"/>
+          </svg>
+        </span>
+        <span class="c-text"><b>Payment confirmed</b> — welcome to the AI Enable Testing Workshop</span>
+      </div>
+
+      <p class="ty-sec-label">Here's how to access your content</p>
+
+      <div class="ty-opts">
+
+        <!-- Option 1: Returning user -->
+        <div class="ty-opt primary">
+          <span class="ty-opt-ic">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+              <path d="m10 17 5-5-5-5"/>
+              <path d="M15 12H3"/>
+            </svg>
+          </span>
+          <div class="ty-opt-body">
+            <div class="ty-opt-title">Already have an account?</div>
+            <p class="ty-opt-sub">Log in and dive straight into your curriculum.</p>
+            <a class="ty-login" href="https://jhg-curriculum.vercel.app/login">
+              Log in
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12h14"/>
+                <path d="m12 5 7 7-7 7"/>
+              </svg>
+            </a>
+          </div>
+        </div>
+
+        <!-- Option 2: New user -->
+        <div class="ty-opt">
+          <span class="ty-opt-ic spin">
+            <span class="ty-spinner"></span>
+          </span>
+          <div class="ty-opt-body">
+            <div class="ty-opt-title">First time here?</div>
+            <p class="ty-opt-sub">We're setting up your account now. Watch for an email to <b>set your password</b> and unlock your content — it'll land within the next 5 minutes. Check your spam folder if it doesn't arrive.</p>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /.ty-card -->
+
+    <p class="ty-foot">© 2026 TalentDojo × Democratize Quality · Share the ♥, don't steal the IP.</p>
+
+  </div>
+</main>
+
+<script>
+// One-time confetti burst — brand rainbow palette
+(function () {
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var colors = ['#C8243A','#E97A1F','#EAB308','#2E7D32','#1B7B8A','#40CFDE','#8B3FBF'];
+  var host = document.getElementById('confetti');
+  for (var i = 0; i < 28; i++) {
+    var p = document.createElement('i');
+    var angle = (Math.PI * (0.15 + Math.random() * 0.7)) * -1;
+    var dist  = 70 + Math.random() * 90;
+    p.style.setProperty('--dx', (Math.cos(angle) * dist * (Math.random() < .5 ? -1 : 1)) + 'px');
+    p.style.setProperty('--dy', (Math.sin(angle) * dist - 10) + 'px');
+    p.style.setProperty('--dr', (Math.random() * 720 - 360) + 'deg');
+    p.style.background = colors[i % colors.length];
+    p.style.animationDelay = (Math.random() * 120) + 'ms';
+    if (Math.random() < .4) p.style.borderRadius = '50%';
+    host.appendChild(p);
+  }
+})();
+</script>
+</body>
+</html>
