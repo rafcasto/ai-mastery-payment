@@ -48,6 +48,7 @@ interface AppState {
   submitted: boolean;
   orderRef: string;
   processing: boolean;
+  payError: string | null;
 }
 
 const state: AppState = {
@@ -61,6 +62,7 @@ const state: AppState = {
   submitted: false,
   orderRef: '',
   processing: false,
+  payError: null,
 };
 
 let stripe: Stripe | null = null;
@@ -276,6 +278,7 @@ function checkoutPanelHTML(): string {
           </div>
         </div>
 
+        ${state.payError ? `<div class="pay-error" role="alert" style="margin-top:16px;padding:11px 13px;border-radius:10px;background:#fdecec;border:1px solid #f3c0c0;color:#a12a2a;font-family:var(--font-body);font-size:13px;line-height:1.5;display:flex;gap:8px;align-items:flex-start">${icon('x', { size: 14 })}<span>${state.payError}</span></div>` : ''}
         <button class="cta" data-action="submit"${state.processing ? ' disabled' : ''}>${ctaInner}</button>
         <p class="cta-fineprint">By enrolling you agree to our terms. Complete week one risk-free — full refund if it's not for you.</p>
 
@@ -410,7 +413,7 @@ async function tryStripeCheckout(): Promise<boolean> {
   try {
     const { clientSecret } = await api.createSession({
       productId: activeProductId,
-      plan: PLANS[state.plan].stripePriceId,
+      plan: PLANS[state.plan].stripePlan,
       email: state.form.email.trim(),
       firstName: state.form.firstName.trim(),
       lastName: state.form.lastName.trim(),
@@ -439,8 +442,12 @@ async function tryStripeCheckout(): Promise<boolean> {
     embedded.mount('#checkout-embed');
     return true;
   } catch (err) {
-    console.warn('[stripe] live checkout unavailable, using local confirmation:', err);
-    if (err instanceof ApiError) console.warn('[stripe] status', err.status, err.message);
+    console.error('[stripe] live checkout failed:', err);
+    if (err instanceof ApiError) console.error('[stripe] status', err.status, err.message);
+    state.payError =
+      err instanceof ApiError
+        ? `We couldn’t start secure checkout: ${err.message}`
+        : 'We couldn’t reach the payment service. Please check your connection and try again.';
     return false;
   }
 }
@@ -451,11 +458,24 @@ async function onSubmit(): Promise<void> {
     renderCheckout();
     return;
   }
+  state.payError = null;
   state.processing = true;
   renderCheckout();
 
   const tookOver = await tryStripeCheckout();
-  if (!tookOver) simulateSuccess();
+  if (tookOver) return;
+
+  // Live checkout did not take over. If Stripe IS configured, this is a real
+  // failure — show the error instead of a fake "enrolled" screen. Only when
+  // Stripe was never configured (offline/local dev) do we fall back to the demo
+  // confirmation so the page stays previewable.
+  state.processing = false;
+  if (stripe) {
+    if (!state.payError) state.payError = 'We couldn’t start secure checkout. Please try again.';
+    renderCheckout();
+    return;
+  }
+  simulateSuccess();
 }
 
 function reset(): void {
@@ -464,6 +484,7 @@ function reset(): void {
   state.submitted = false;
   state.processing = false;
   state.errors = {};
+  state.payError = null;
   renderCheckout();
 }
 
@@ -632,6 +653,11 @@ function applyApiPrices(products: ApiProduct[]): boolean {
     const plan = PLANS[id];
     plan.price = entry.cents / 100;
     plan.stripePriceId = entry.price.id;
+    // /api/sessions/create expects the plan KEYWORD ("full" | "installment"),
+    // which Stripe exposes as the price planSlot. Capture it from the live price
+    // so the keyword we send always matches the plan the buyer selected.
+    const slot = (entry.price.planSlot ?? '').toString().trim().toLowerCase();
+    if (slot === 'full' || slot === 'installment') plan.stripePlan = slot;
     if (plan.canInstall) plan.installEach = Math.round(plan.price / 2);
     if (entry.price.currency) currency = entry.price.currency;
     applied = true;
