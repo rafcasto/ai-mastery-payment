@@ -141,9 +141,12 @@ function leftColumnHTML(): string {
           <h3 class="free-title">Need more information?</h3>
           <p class="free-sub">Have specific questions about the workshop content, enterprise implementation, or team pricing? We’re here to help.</p>
           <div class="free-btns">
-            <a class="cta" href="mailto:rafael@talentdojo.pro?subject=AI%20Testing%20Mastery%20%E2%80%94%20more%20information" style="width:auto;display:inline-flex;margin-top:0">
-              Get detailed information ${icon('arrow-up-right', { size: 16 })}
-            </a>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+              <a class="cta" href="https://jhg-curriculum.vercel.app/register/B1LdON23yiLAPclAFV1O" style="width:auto;display:inline-flex;margin-top:0">
+                See How It Works ${icon('arrow-up-right', { size: 16 })}
+              </a>
+              <span class="cta-fineprint" style="margin-top:0">Create a free account to take a look inside</span>
+            </div>
             <a class="cta-ghost" href="mailto:rafael@talentdojo.pro?subject=AI%20Testing%20Mastery%20%E2%80%94%20funding%20options">How to get funded</a>
           </div>
           <div class="free-note">Email us at <a href="mailto:rafael@talentdojo.pro">rafael@talentdojo.pro</a> or schedule a 15-minute consultation call.</div>
