@@ -16,10 +16,10 @@ button { font-family: inherit; }
 
 /* tweakable variables (overridden by tweaks panel) */
 :root {
-  --cta-bg: var(--dq-sage-green);
-  --cta-bg-hover: var(--color-accent-hover);
+  --cta-bg: #155f6b;
+  --cta-bg-hover: #0f4850;
   --cta-fg: #ffffff;
-  --cta-halo: 0 8px 20px rgb(123 200 164 / 35%);
+  --cta-halo: 0 8px 20px rgb(21 95 107 / 30%);
 }
 
 /* ---------- Header ---------- */

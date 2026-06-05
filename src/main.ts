@@ -286,7 +286,6 @@ function checkoutPanelHTML(): string {
         <div class="trust">
           <span>${icon('lock', { size: 13 })} 256-bit secure</span>
           <span>${icon('shield-check', { size: 13 })} Refund guarantee</span>
-          <span>${icon('globe', { size: 13 })} Model-agnostic</span>
         </div>
       </div>
     </div>`;
