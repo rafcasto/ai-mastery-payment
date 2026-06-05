@@ -22,7 +22,6 @@ import {
   COUPONS,
   INCLUDED,
   FAQS,
-  D_PILLS,
   fmt,
   EMAIL_RE,
   pricing,
@@ -68,6 +67,14 @@ const state: AppState = {
 let stripe: Stripe | null = null;
 let embedded: StripeEmbeddedCheckout | null = null;
 
+/* -- countdown state -- */
+/** Closing date for the cohort price when it is in the future. */
+let cohortClosingDate: Date | null = null;
+/** Running countdown setInterval handle. */
+let countdownInterval: ReturnType<typeof setInterval> | null = null;
+/** Plan slots whose cartClosingDate has already passed — hidden from the selector. */
+const expiredPlans = new Set<'sp' | 'co'>();
+
 /**
  * Product id used when creating the checkout session. Defaults to the design
  * constant but is overwritten with whatever GET /api/products actually serves,
@@ -80,11 +87,6 @@ const root = document.getElementById('root')!;
 /* ------------------------------ left column ------------------------------- */
 
 function leftColumnHTML(): string {
-  const pills = D_PILLS.map(
-    (d) =>
-      `<span class="d-pill ${d.c}"><span class="dot"></span><span class="num">${d.n}</span> · ${d.label}</span>`,
-  ).join('');
-
   const included = INCLUDED.map(
     (it) => `
     <div class="inc-item">
@@ -107,7 +109,7 @@ function leftColumnHTML(): string {
       <h1 class="hero-h1">Master <b>AI-powered testing</b> in 4 weeks<br />+ a 30-day implementation challenge.</h1>
       <p class="hero-lede">TalentDojo &amp; Democratize Quality designed this programme to accelerate the adoption of AI-driven testing in <b>weeks, not months</b>. <em>Model-agnostic: works with ChatGPT, Gemini, Claude or Copilot.</em></p>
       <p class="hero-out">By the end you’ll have mastered <b>GitHub Copilot, local LLMs and Model Context Protocols</b> to build comprehensive test suites <b>10× faster</b> than traditional methods.</p>
-      <div class="d-row">${pills}</div>
+      <div id="d-row"></div>
 
       <div class="sec">
         <div class="testi">
@@ -159,6 +161,7 @@ function leftColumnHTML(): string {
 
 function planSelectHTML(): string {
   return (['sp', 'co'] as const)
+    .filter((id) => !expiredPlans.has(id))
     .map((id) => {
       const p = PLANS[id];
       const sel = state.plan === id ? ' sel' : '';
@@ -243,10 +246,10 @@ function checkoutPanelHTML(): string {
         </div>
       </div>
       <div class="checkout-body">
-        <div class="block-label">Format</div>
+        ${(['sp', 'co'] as const).filter((id) => !expiredPlans.has(id)).length > 1 ? '<div class="block-label">Format</div>' : ''}
         ${planSelectHTML()}
 
-        <div class="block-label">Your details</div>
+        <div class="block-label">Student details</div>
         <div class="row-2">
           <div class="field">
             <label class="field-label">First name</label>
@@ -418,6 +421,10 @@ async function tryStripeCheckout(): Promise<boolean> {
       firstName: state.form.firstName.trim(),
       lastName: state.form.lastName.trim(),
       ...(state.appliedCoupon ? { promotionCode: state.appliedCoupon.code } : {}),
+      // Student metadata — buyer is the student
+      studentName: state.form.firstName.trim(),
+      studentLastname: state.form.lastName.trim(),
+      studentEmail: state.form.email.trim(),
     });
 
     const col = document.getElementById('checkout');
@@ -661,7 +668,28 @@ function applyApiPrices(products: ApiProduct[]): boolean {
     if (plan.canInstall) plan.installEach = Math.round(plan.price / 2);
     if (entry.price.currency) currency = entry.price.currency;
     applied = true;
+
+    // ── cartClosingDate handling ──────────────────────────────────────────
+    const rawDate = entry.price.cartClosingDate;
+    if (rawDate) {
+      const parsed = new Date(rawDate);
+      if (!isNaN(parsed.getTime())) {
+        if (parsed.getTime() <= Date.now()) {
+          // Already expired on load — mark immediately, no countdown needed
+          expiredPlans.add(id);
+          console.info(`[prices] plan "${id}" cartClosingDate has passed — hiding from selector.`);
+        } else if (id === 'co') {
+          // Future date on the cohort plan — drive the countdown
+          cohortClosingDate = parsed;
+        }
+      }
+    }
   });
+
+  // Auto-switch away from any plan that was just marked expired
+  if (expiredPlans.has(state.plan)) {
+    state.plan = expiredPlans.has('sp') ? 'co' : 'sp';
+  }
 
   if (currency) setCurrency(currency);
   if (!applied) {
@@ -670,6 +698,69 @@ function applyApiPrices(products: ApiProduct[]): boolean {
     );
   }
   return applied;
+}
+
+/* ----------------------------- countdown ---------------------------------- */
+
+function startCountdown(): void {
+  const row = document.getElementById('d-row');
+  if (!row || !cohortClosingDate) return;
+
+  row.innerHTML = `
+    <div class="countdown">
+      <p class="countdown-eyebrow">Cohort enrolment closes in</p>
+      <div class="cd-units">
+        <div class="cd-unit"><span class="cd-num" id="cd-days">00</span><span class="cd-label">Days</span></div>
+        <div class="cd-sep">:</div>
+        <div class="cd-unit"><span class="cd-num" id="cd-hours">00</span><span class="cd-label">Hours</span></div>
+        <div class="cd-sep">:</div>
+        <div class="cd-unit"><span class="cd-num" id="cd-mins">00</span><span class="cd-label">Mins</span></div>
+        <div class="cd-sep">:</div>
+        <div class="cd-unit"><span class="cd-num" id="cd-secs">00</span><span class="cd-label">Secs</span></div>
+      </div>
+    </div>`;
+
+  const pad = (n: number) => String(n).padStart(2, '0');
+
+  function tick(): void {
+    const diff = cohortClosingDate!.getTime() - Date.now();
+
+    if (diff <= 0) {
+      clearInterval(countdownInterval!);
+      countdownInterval = null;
+
+      // 1. Hide the countdown row completely
+      const r = document.getElementById('d-row');
+      if (r) r.style.display = 'none';
+
+      // 2. Mark the cohort plan as expired
+      expiredPlans.add('co');
+
+      // 3. Auto-switch away from cohort if currently selected
+      if (state.plan === 'co') state.plan = 'sp';
+
+      // 4. Re-render checkout so the plan selector drops the cohort option
+      renderCheckout();
+      return;
+    }
+
+    const d = Math.floor(diff / 86_400_000);
+    const h = Math.floor((diff % 86_400_000) / 3_600_000);
+    const m = Math.floor((diff % 3_600_000) / 60_000);
+    const s = Math.floor((diff % 60_000) / 1_000);
+
+    const set = (id: string, v: number) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = pad(v);
+    };
+    set('cd-days', d);
+    set('cd-hours', h);
+    set('cd-mins', m);
+    set('cd-secs', s);
+  }
+
+  tick();
+  countdownInterval = setInterval(tick, 1_000);
 }
 
 /* ------------------------------- bootstrap -------------------------------- */
@@ -697,6 +788,7 @@ async function init(): Promise<void> {
     if (applyApiPrices(products)) {
       console.info('[prices] live prices applied from /api/products.');
       renderCheckout();
+      if (cohortClosingDate) startCountdown();
     }
     // applyApiPrices already logs an error when nothing was applied.
   } catch (err) {

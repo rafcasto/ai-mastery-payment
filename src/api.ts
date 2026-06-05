@@ -28,6 +28,8 @@ export interface ApiPrice {
   planSlot?: string | null;
   formatted?: string | null;
   type?: string | null;
+  cartClosingDate?: string | null;
+  tag?: string | null;
 }
 
 export interface ApiProduct {
@@ -54,6 +56,9 @@ export interface CreateSessionPayload {
   firstName: string;
   lastName: string;
   promotionCode?: string;
+  studentName?: string;
+  studentLastname?: string;
+  studentEmail?: string;
 }
 
 export interface CreateSessionResponse {

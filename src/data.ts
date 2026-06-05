@@ -149,19 +149,6 @@ export const FAQS: Faq[] = [
   },
 ];
 
-export interface DPill {
-  c: string;
-  n: string;
-  label: string;
-}
-
-export const D_PILLS: DPill[] = [
-  { c: 'd1', n: 'D1', label: 'Delegation' },
-  { c: 'd2', n: 'D2', label: 'Description' },
-  { c: 'd3', n: 'D3', label: 'Discernment' },
-  { c: 'd4', n: 'D4', label: 'Diligence' },
-];
-
 export const CTA_THEMES: Record<string, { hover: string; halo: string }> = {
   '#7BC8A4': { hover: '#6BB893', halo: '0 8px 20px rgb(123 200 164 / 35%)' },
   '#1B7B8A': { hover: '#155F6B', halo: '0 8px 20px rgb(27 123 138 / 30%)' },
